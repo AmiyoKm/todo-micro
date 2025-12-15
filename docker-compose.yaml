@@ -1,0 +1,67 @@
+services:
+    db:
+        image: postgres:18.0-alpine3.22
+        container_name: todo_micro_db
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: todo_micro
+            POSTGRES_PORT: 5432
+        networks:
+            - todo_micro
+        volumes:
+            - todo_micro_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres -d todo_micro"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+    redis:
+        image: redis:alpine
+        container_name: todo_micro_redis
+        networks:
+            - todo_micro
+        volumes:
+            - todo_micro_redis_data:/data
+        healthcheck:
+            test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+    api-gateway:
+        build: ./client
+        ports:
+            - "3000:3000"
+        networks:
+            - todo_micro
+        depends_on:
+            - todo-service
+            - rabbitmq
+        environment:
+            TODO_SERVICE_TARGET: todo-service:8080
+    todo-service:
+        build: ./server
+        networks:
+            - todo_micro
+        depends_on:
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+
+        command: sh -c "make db/migrations/up && ./todo"
+        environment:
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            POSTGRES_HOST: db
+            POSTGRES_PORT: 5432
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: todo_micro
+            RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+networks:
+    todo_micro:
+        driver: bridge
+volumes:
+    todo_micro_data:
+    todo_micro_redis_data:
