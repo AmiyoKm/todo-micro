@@ -30,7 +30,7 @@ func main() {
 		Name:        utils.GetEnv("POSTGRES_DB", "todo_micro"),
 		User:        utils.GetEnv("POSTGRES_USER", "postgres"),
 		Password:    utils.GetEnv("POSTGRES_PASSWORD", "password"),
-		SslMode:     utils.GetEnv("POSTGRES_SSL_MODE", "disable"),
+		SslMode:     utils.GetEnv("POSTGRES_SSLMODE", "disable"),
 		MaxConnOpen: utils.GetEnvInt("POSTGRES_MAX_CONN_OPEN", 60),
 		MaxIdleConn: utils.GetEnvInt("POSTGRES_MAX_IDLE_CONN", 60),
 		MaxIdleTime: utils.GetEnv("POSTGRES_MAX_IDLE_TIME", "15m"),
