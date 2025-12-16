@@ -21,18 +21,18 @@ func NewRepo(db *sql.DB) service.Repository {
 }
 
 func (r *repo) Create(ctx context.Context, todo *model.Todo) (*model.Todo, error) {
-	query := `INSERT INTO todos (title, description, done) VALUES ($1, $2, $3) RETURNING id`
-	err := r.db.QueryRowContext(ctx, query, todo.Title, todo.Description, todo.Done).Scan(&todo.ID)
+	query := `INSERT INTO todos (user_id, title, description, done) VALUES ($1, $2, $3, $4) RETURNING id`
+	err := r.db.QueryRowContext(ctx, query, todo.UserId, todo.Title, todo.Description, todo.Done).Scan(&todo.ID)
 	if err != nil {
 		return nil, err
 	}
 	return todo, nil
 }
 
-func (r *repo) GetByID(ctx context.Context, id uuid.UUID) (*model.Todo, error) {
-	query := `SELECT id, title, description, done FROM todos WHERE id = $1`
+func (r *repo) GetByID(ctx context.Context, id uuid.UUID, userId uuid.UUID) (*model.Todo, error) {
+	query := `SELECT id, user_id, title, description, done FROM todos WHERE id = $1 AND user_id = $2`
 	var todo model.Todo
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&todo.ID, &todo.Title, &todo.Description, &todo.Done)
+	err := r.db.QueryRowContext(ctx, query, id, userId).Scan(&todo.ID, &todo.UserId, &todo.Title, &todo.Description, &todo.Done)
 	if err != nil {
 		return nil, err
 	}

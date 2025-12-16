@@ -21,7 +21,7 @@ func NewService(repo Repository, cache CacheRepository) Service {
 	}
 }
 
-func (s *service) GetByID(ctx context.Context, id uuid.UUID) (*model.Todo, error) {
+func (s *service) GetByID(ctx context.Context, id uuid.UUID, userId uuid.UUID) (*model.Todo, error) {
 	cachedTodo, err := s.cache.Get(ctx, id.String())
 	if err != nil && err != redis.Nil {
 		log.Printf("Cache get error: %v", err)
@@ -31,7 +31,7 @@ func (s *service) GetByID(ctx context.Context, id uuid.UUID) (*model.Todo, error
 		return cachedTodo, nil
 	}
 
-	todo, err := s.repo.GetByID(ctx, id)
+	todo, err := s.repo.GetByID(ctx, id, userId)
 	if err != nil {
 		return nil, err
 	}

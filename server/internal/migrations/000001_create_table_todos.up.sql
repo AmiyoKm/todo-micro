@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS todos (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     done BOOLEAN DEFAULT FALSE,

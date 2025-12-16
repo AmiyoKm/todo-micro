@@ -7,6 +7,7 @@ import (
 
 type Todo struct {
 	ID          uuid.UUID `json:"id"`
+	UserId      uuid.UUID `json:"user_id"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	Done        bool      `json:"done"`
@@ -15,6 +16,7 @@ type Todo struct {
 func (t *Todo) ToProto() *todopb.Todo {
 	return &todopb.Todo{
 		Id:          t.ID.String(),
+		UserId:      t.UserId.String(),
 		Title:       t.Title,
 		Description: t.Description,
 		Done:        t.Done,

@@ -8,6 +8,6 @@ import (
 )
 
 type Service interface {
-	GetByID(ctx context.Context, id uuid.UUID) (*model.Todo, error)
+	GetByID(ctx context.Context, id uuid.UUID, userId uuid.UUID) (*model.Todo, error)
 	Create(ctx context.Context, todo *model.Todo) (*model.Todo, error)
 }

@@ -23,9 +23,15 @@ func NewGRPCHandler(server *grpc.Server, svc Service) *Handler {
 }
 
 func (h *Handler) CreateTodo(ctx context.Context, req *todopb.CreateTodoRequest) (*todopb.TodoResponse, error) {
+	userId, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
 	todo := &model.Todo{
 		Title:       req.Title,
 		Description: req.Description,
+		UserId:      userId,
 	}
 
 	newTodo, err := h.svc.Create(ctx, todo)
@@ -46,7 +52,12 @@ func (h *Handler) GetTodo(ctx context.Context, req *todopb.GetTodoRequest) (*tod
 		return nil, err
 	}
 
-	todo, err := h.svc.GetByID(ctx, id)
+	userId, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	todo, err := h.svc.GetByID(ctx, id, userId)
 	if err != nil {
 		return nil, err
 	}
