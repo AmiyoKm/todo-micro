@@ -22,6 +22,25 @@ func NewGRPCHandler(server *grpc.Server, svc Service) *Handler {
 	return handler
 }
 
+func (h *Handler) GetTodos(ctx context.Context, req *todopb.GetTodosRequest) (*todopb.TodosResponse, error) {
+	userId, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	todos, err := h.svc.GetTodos(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &todopb.TodosResponse{}
+	for _, todo := range todos {
+		res.Todos = append(res.Todos, todo.ToProto())
+	}
+
+	return res, nil
+}
+
 func (h *Handler) CreateTodo(ctx context.Context, req *todopb.CreateTodoRequest) (*todopb.TodoResponse, error) {
 	userId, err := uuid.Parse(req.UserId)
 	if err != nil {

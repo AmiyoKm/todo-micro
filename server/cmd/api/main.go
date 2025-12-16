@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/AmiyoKm/todo-micro/configs"
 	"github.com/AmiyoKm/todo-micro/internal/infra/cache"
@@ -37,10 +38,11 @@ func main() {
 	}
 
 	redisConfig := configs.RedisConfig{
-		Host:     utils.GetEnv("REDIS_HOST", "localhost"),
-		Port:     utils.GetEnv("REDIS_PORT", "6379"),
-		Password: utils.GetEnv("REDIS_PASSWORD", ""),
-		DB:       utils.GetEnvInt("REDIS_DB_NUMBER", 0),
+		Host:       utils.GetEnv("REDIS_HOST", "localhost"),
+		Port:       utils.GetEnv("REDIS_PORT", "6379"),
+		Password:   utils.GetEnv("REDIS_PASSWORD", ""),
+		DB:         utils.GetEnvInt("REDIS_DB_NUMBER", 0),
+		Expiration: time.Duration(utils.GetEnvInt("REDIS_EXPIRATION", 300)) * time.Second,
 	}
 
 	config := configs.Config{

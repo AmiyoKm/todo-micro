@@ -24,5 +24,8 @@ func main() {
 	mux.HandleFunc("POST /todos", createTodo)
 	mux.HandleFunc("PATCH /todos/{id}", updateTodo)
 	mux.HandleFunc("DELETE /todos/{id}", deleteTodo)
+	mux.HandleFunc("POST /register", createUser)
+	mux.HandleFunc("POST /login", login)
+	mux.HandleFunc("GET /users/me", getUser)
 	http.ListenAndServe(":3000", mux)
 }

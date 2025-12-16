@@ -30,3 +30,30 @@ type Todo struct {
 	Description string `json:"description"`
 	Done        bool   `json:"done"`
 }
+
+type User struct {
+	Id       string `json:"id"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	Jwt string `json:"jwt"`
+}
+
+type CreateUserRequest struct {
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+}
+
+type RegisterResponse struct {
+	Id       string `json:"id"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}

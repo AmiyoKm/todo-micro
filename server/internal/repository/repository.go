@@ -38,3 +38,25 @@ func (r *repo) GetByID(ctx context.Context, id uuid.UUID, userId uuid.UUID) (*mo
 	}
 	return &todo, nil
 }
+
+func (r *repo) GetTodos(ctx context.Context, userId uuid.UUID) ([]*model.Todo, error) {
+	query := `SELECT id, user_id, title, description, done FROM todos WHERE user_id = $1`
+	rows, err := r.db.QueryContext(ctx, query, userId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var todos []*model.Todo
+	for rows.Next() {
+		var todo model.Todo
+		if err := rows.Scan(&todo.ID, &todo.UserId, &todo.Title, &todo.Description, &todo.Done); err != nil {
+			return nil, err
+		}
+		todos = append(todos, &todo)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return todos, nil
+}

@@ -1,12 +1,10 @@
 package configs
 
-import "time"
-
 type Config struct {
-	Port  int
-	Env   string
-	Db    DbConfig
-	Redis RedisConfig
+	Port int
+	Env  string
+	Db   DbConfig
+	JWT  JWTConfig
 }
 
 type DbConfig struct {
@@ -21,10 +19,7 @@ type DbConfig struct {
 	MaxIdleTime string
 }
 
-type RedisConfig struct {
-	Host       string
-	Port       string
-	Password   string
-	DB         int
-	Expiration time.Duration
+type JWTConfig struct {
+	Secret          string
+	ExpirationHours int
 }

@@ -11,11 +11,15 @@ import (
 type Repository interface {
 	GetByID(ctx context.Context, id uuid.UUID, userId uuid.UUID) (*model.Todo, error)
 	Create(ctx context.Context, todo *model.Todo) (*model.Todo, error)
+	GetTodos(ctx context.Context, userId uuid.UUID) ([]*model.Todo, error)
 }
 
 type CacheRepository interface {
 	Get(ctx context.Context, key string) (*model.Todo, error)
 	Set(ctx context.Context, key string, todo *model.Todo) error
+	GetTodos(ctx context.Context, key string) ([]*model.Todo, error)
+	SetTodos(ctx context.Context, key string, todos []*model.Todo) error
+	InvalidateUserTodos(ctx context.Context, userId string) error
 }
 
 type Service interface {
