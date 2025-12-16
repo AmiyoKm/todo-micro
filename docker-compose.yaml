@@ -1,5 +1,5 @@
 services:
-    db:
+    todo-db:
         image: postgres:18.0-alpine3.22
         container_name: todo_micro_db
         environment:
@@ -8,11 +8,28 @@ services:
             POSTGRES_DB: todo_micro
             POSTGRES_PORT: 5432
         networks:
-            - todo_micro
+            - todo
         volumes:
             - todo_micro_data:/var/lib/postgresql/data
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U postgres -d todo_micro"]
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+    user-db:
+        image: postgres:18.0-alpine3.22
+        container_name: user_micro_db
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: user_micro
+            POSTGRES_PORT: 5432
+        networks:
+            - user
+        volumes:
+            - user_micro_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
             interval: 5s
             timeout: 5s
             retries: 5
@@ -20,7 +37,7 @@ services:
         image: redis:alpine
         container_name: todo_micro_redis
         networks:
-            - todo_micro
+            - todo
         volumes:
             - todo_micro_redis_data:/data
         healthcheck:
@@ -28,79 +45,10 @@ services:
             interval: 5s
             timeout: 5s
             retries: 5
-    api-gateway:
-        build: ./client
-        ports:
-            - "3000:3000"
-        networks:
-            - todo_micro
-        depends_on:
-            - todo-service
-            - user-service
-            - rabbitmq
-        environment:
-            TODO_SERVICE_TARGET: todo-service:8080
-            USER_SERVICE_TARGET: user-service:8080
-            RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-    user-service:
-        build: ./user
-        networks:
-            - todo_micro
-        depends_on:
-            db:
-                condition: service_healthy
-
-        command: sh -c "make db/migrations/up && ./user"
-        environment:
-            POSTGRES_HOST: db
-            POSTGRES_PORT: 5432
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: password
-            POSTGRES_DB: todo_micro
-            POSTGRES_SSLMODE: disable
-    todo-service:
-        build: ./server
-        networks:
-            - todo_micro
-        depends_on:
-            db:
-                condition: service_healthy
-            redis:
-                condition: service_healthy
-
-        command: sh -c "make db/migrations/up && ./todo"
-        environment:
-            REDIS_HOST: redis
-            REDIS_PORT: 6379
-            REDIS_EXPIRATION: 300
-            POSTGRES_HOST: db
-            POSTGRES_PORT: 5432
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: password
-            POSTGRES_DB: todo_micro
-            POSTGRES_SSLMODE: disable
-            RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-    mutate-todo:
-        build: ./mutate-todo
-        networks:
-            - todo_micro
-        depends_on:
-            db:
-                condition: service_healthy
-            rabbitmq:
-                condition: service_healthy
-        environment:
-            POSTGRES_HOST: db
-            POSTGRES_PORT: 5432
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: password
-            POSTGRES_DB: todo_micro
-            POSTGRES_SSLMODE: disable
-            RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     rabbitmq:
         image: rabbitmq:4.2.1-management-alpine
         networks:
-            - todo_micro
+            - todo
         ports:
             - "5672:5672"
             - "15672:15672"
@@ -110,9 +58,82 @@ services:
             timeout: 10s
             retries: 5
             start_period: 10s
+    api-gateway:
+        build: ./client
+        ports:
+            - "3000:3000"
+        networks:
+            - todo
+            - user
+        depends_on:
+            - todo-service
+            - user-service
+            - rabbitmq
+        environment:
+            TODO_SERVICE_TARGET: todo-service:8080
+            USER_SERVICE_TARGET: user-service:8081
+            RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    user-service:
+        build: ./user
+        networks:
+            - user
+        depends_on:
+            user-db:
+                condition: service_healthy
+        command: sh -c "make db/migrations/up && ./user"
+        environment:
+            POSTGRES_HOST: user-db
+            POSTGRES_PORT: 5432
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: user_micro
+            POSTGRES_SSLMODE: disable
+            JWT_SECRET: secret
+            JWT_EXPIRATION_HOURS: 24
+    todo-service:
+        build: ./server
+        networks:
+            - todo
+        depends_on:
+            todo-db:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        command: sh -c "make db/migrations/up && ./todo"
+        environment:
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            REDIS_EXPIRATION: 300
+            POSTGRES_HOST: todo-db
+            POSTGRES_PORT: 5432
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: todo_micro
+            POSTGRES_SSLMODE: disable
+            RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    mutate-todo:
+        build: ./mutate-todo
+        networks:
+            - todo
+        depends_on:
+            todo-db:
+                condition: service_healthy
+            rabbitmq:
+                condition: service_healthy
+        environment:
+            POSTGRES_HOST: todo-db
+            POSTGRES_PORT: 5432
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: todo_micro
+            POSTGRES_SSLMODE: disable
+            RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
 networks:
-    todo_micro:
+    user:
+        driver: bridge
+    todo:
         driver: bridge
 volumes:
     todo_micro_data:
+    user_micro_data:
     todo_micro_redis_data:

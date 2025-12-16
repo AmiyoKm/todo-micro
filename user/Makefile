@@ -5,7 +5,7 @@ ifneq (,$(wildcard .env))
 endif
 MIGRATIONS_PATH=./internal/migrations/
 
-DB_DSN ?= postgres://postgres:password@db:5432/user_micro?sslmode=disable
+DB_DSN ?= postgres://postgres:password@user-db:5432/user_micro?sslmode=disable
 
 
 # ========================================================================================== #

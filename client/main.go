@@ -20,12 +20,18 @@ func main() {
 	rabbitMQ = rabbit
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /todos/{id}", getTodo)
-	mux.HandleFunc("POST /todos", createTodo)
-	mux.HandleFunc("PATCH /todos/{id}", updateTodo)
-	mux.HandleFunc("DELETE /todos/{id}", deleteTodo)
+
+	// Public routes (no authentication required)
 	mux.HandleFunc("POST /register", createUser)
 	mux.HandleFunc("POST /login", login)
-	mux.HandleFunc("GET /users/me", getUser)
+
+	// Protected routes (authentication required)
+	mux.HandleFunc("GET /todos", authMiddleware(getTodos))
+	mux.HandleFunc("GET /todos/{id}", authMiddleware(getTodo))
+	mux.HandleFunc("POST /todos", authMiddleware(createTodo))
+	mux.HandleFunc("PATCH /todos/{id}", authMiddleware(updateTodo))
+	mux.HandleFunc("DELETE /todos/{id}", authMiddleware(deleteTodo))
+	mux.HandleFunc("GET /users/me", authMiddleware(getUser))
+
 	http.ListenAndServe(":3000", mux)
 }

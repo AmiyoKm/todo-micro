@@ -10,6 +10,7 @@ import (
 
 type Todo struct {
 	ID          string `json:"id"`
+	UserId      string `json:"user_id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Done        bool   `json:"done"`
@@ -37,7 +38,7 @@ func (a *app) handleMessage(msg amqp.Delivery) error {
 	}
 
 	if message.Topic == "todo.delete" {
-		err = a.deleteTodo(message.Todo.ID)
+		err = a.deleteTodo(message.Todo.ID, message.Todo.UserId)
 		if err != nil {
 			return err
 		}
@@ -47,8 +48,8 @@ func (a *app) handleMessage(msg amqp.Delivery) error {
 }
 
 func (a *app) updateTodo(todo *Todo) error {
-	query := `UPDATE todos SET title = $1, description = $2, done = $3 WHERE id = $4`
-	_, err := a.db.Exec(query, todo.Title, todo.Description, todo.Done, todo.ID)
+	query := `UPDATE todos SET title = $1, description = $2, done = $3 WHERE id = $4 AND user_id = $5`
+	_, err := a.db.Exec(query, todo.Title, todo.Description, todo.Done, todo.ID, todo.UserId)
 	if err != nil {
 		return err
 	}
@@ -56,11 +57,11 @@ func (a *app) updateTodo(todo *Todo) error {
 	return nil
 }
 
-func (a *app) deleteTodo(id string) error {
+func (a *app) deleteTodo(id string, userId string) error {
 
-	query := `DELETE FROM todos WHERE id = $1`
+	query := `DELETE FROM todos WHERE id = $1 AND user_id = $2`
 
-	_, err := a.db.Exec(query, id)
+	_, err := a.db.Exec(query, id, userId)
 	if err != nil {
 		return err
 	}

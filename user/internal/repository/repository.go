@@ -21,7 +21,7 @@ func NewRepo(db *sql.DB) service.Repository {
 }
 
 func (r *repo) Create(ctx context.Context, user *model.User) (*model.User, error) {
-	query := `INSERT INTO users (email, name, password_hash) VALUES ($1, $2, $3) RETURNING id, created_at`
+	query := `INSERT INTO users (email, name, password_hash) VALUES ($1, $2, $3) RETURNING id`
 	err := r.db.QueryRowContext(ctx, query, user.Email, user.Name, user.PasswordHash).Scan(&user.ID)
 	if err != nil {
 		return nil, err

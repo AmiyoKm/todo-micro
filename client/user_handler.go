@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"github.com/AmiyoKm/todo-micro/api-gateway/gen/userpb"
 )
@@ -48,35 +47,9 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
-	header := r.Header.Get("Authorization")
-	if header == "" {
+	user, ok := GetUserFromContext(r.Context())
+	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	parts := strings.Split(header, " ")
-	if len(parts) != 2 || parts[1] == "" {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
-		return
-	}
-	token := parts[1]
-
-	ctx := r.Context()
-
-	client, err := NewUserServerClient()
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	defer client.Close()
-
-	req := &userpb.GetUserRequest{
-		Jwt: token,
-	}
-
-	user, err := client.Client.GetUser(ctx, req)
-	if err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 

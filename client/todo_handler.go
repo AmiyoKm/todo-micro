@@ -5,7 +5,43 @@ import (
 	"net/http"
 )
 
+func getTodos(w http.ResponseWriter, r *http.Request) {
+	user, ok := GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	todoService, err := NewTodoServerClient()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer todoService.Close()
+
+	payload := GetTodosRequest{
+		UserId: user.ID,
+	}
+
+	todos, err := todoService.Client.GetTodos(r.Context(), payload.toProto())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(todos); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func getTodo(w http.ResponseWriter, r *http.Request) {
+	user, ok := GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	id := r.PathValue("id")
 
@@ -17,7 +53,8 @@ func getTodo(w http.ResponseWriter, r *http.Request) {
 	defer todoService.Close()
 
 	payload := GetTodoRequest{
-		Id: id,
+		Id:     id,
+		UserId: user.ID,
 	}
 
 	todo, err := todoService.Client.GetTodo(r.Context(), payload.toProto())
@@ -34,12 +71,20 @@ func getTodo(w http.ResponseWriter, r *http.Request) {
 }
 
 func createTodo(w http.ResponseWriter, r *http.Request) {
+	user, ok := GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	var payload CreateTodoRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	payload.UserId = user.ID
 
 	todoService, err := NewTodoServerClient()
 	if err != nil {
@@ -68,6 +113,12 @@ type UpdateTodoRequest struct {
 }
 
 func updateTodo(w http.ResponseWriter, r *http.Request) {
+	user, ok := GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	id := r.PathValue("id")
 
 	ctx := r.Context()
@@ -82,6 +133,7 @@ func updateTodo(w http.ResponseWriter, r *http.Request) {
 		Topic: "todo.update",
 		Todo: &Todo{
 			Id:          id,
+			UserId:      user.ID,
 			Title:       payload.Title,
 			Description: payload.Description,
 			Done:        payload.Done,
@@ -101,6 +153,12 @@ func updateTodo(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteTodo(w http.ResponseWriter, r *http.Request) {
+	user, ok := GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	id := r.PathValue("id")
 
 	ctx := r.Context()
@@ -108,7 +166,8 @@ func deleteTodo(w http.ResponseWriter, r *http.Request) {
 	message := &Message{
 		Topic: "todo.delete",
 		Todo: &Todo{
-			Id: id,
+			Id:     id,
+			UserId: user.ID,
 		},
 	}
 
