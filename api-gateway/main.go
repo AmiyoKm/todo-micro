@@ -33,5 +33,5 @@ func main() {
 	mux.HandleFunc("DELETE /todos/{id}", authMiddleware(deleteTodo))
 	mux.HandleFunc("GET /users/me", authMiddleware(getUser))
 
-	http.ListenAndServe(":3000", mux)
+	http.ListenAndServe(":3000", corsMiddleware(http.Handler(mux)))
 }
