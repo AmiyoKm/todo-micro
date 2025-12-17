@@ -1,3 +1,5 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
@@ -17,18 +19,26 @@ export function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
+const queryClient = useQueryClient();
+
+  const {mutate, isPending, error} = useMutation({
+    mutationKey: ["user"],
+    mutationFn: register,
+    onSuccess: () => {
+      navigate("/login");
+      queryClient.invalidateQueries({
+        queryKey: ["user"],
+      });
+    },
+    onError: (error) => {
+      console.log(error);
+    }
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    try {
-      await register({ name, email, password });
-      navigate("/login");
-    } catch (err: any) {
-      setError("Registration failed. Please try again.");
-    }
+    mutate({ name, email, password });
   };
 
   return (
@@ -73,11 +83,11 @@ export function Register() {
                 required
               />
             </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-sm text-red-500">{error.message}</p>}
           </CardContent>
           <CardFooter className="flex flex-col space-y-2">
-            <Button type="submit" className="w-full">
-              Register
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Register"}
             </Button>
             <p className="text-sm text-center text-gray-600">
               Already have an account?{" "}

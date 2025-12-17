@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -24,7 +23,6 @@ type Message struct {
 func (a *app) handleMessage(msg amqp.Delivery) error {
 
 	var message Message
-	time.Sleep(time.Second * 2)
 	err := json.NewDecoder(bytes.NewReader(msg.Body)).Decode(&message)
 	if err != nil {
 		return err

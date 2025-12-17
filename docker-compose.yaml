@@ -61,23 +61,20 @@ services:
     frontend:
         build: ./frontend
         ports:
-            - "80:80"
-        networks:
-            - frontend
+            - "5173:80"
         depends_on:
             - api-gateway
     api-gateway:
         build: ./api-gateway
         ports:
             - "3000:3000"
-        networks:
-            - frontend
-            - todo
-            - user
         depends_on:
             - todo-service
             - user-service
             - rabbitmq
+        networks:
+            - todo
+            - user
         environment:
             TODO_SERVICE_TARGET: todo-service:8080
             USER_SERVICE_TARGET: user-service:8081
@@ -141,8 +138,6 @@ networks:
     user:
         driver: bridge
     todo:
-        driver: bridge
-    frontend:
         driver: bridge
 volumes:
     todo_micro_data:

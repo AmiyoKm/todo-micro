@@ -1,6 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, Circle, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "../components/ui/alert-dialog";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -57,16 +68,12 @@ export function Dashboard() {
     updateMutation.mutate({ ...todo, done: !todo.done });
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this todo?")) {
-      deleteMutation.mutate(id);
-    }
-  };
+
 
   if (isLoading) return <div className="p-8 text-center">Loading todos...</div>;
   if (error) return <div className="p-8 text-center text-red-500">Error loading todos</div>;
 
-  const todos = data?.todos || [];
+  const todos = data?.data.todos || [];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8">
@@ -142,14 +149,34 @@ export function Dashboard() {
                     <Badge variant={todo.done ? "secondary" : "default"}>
                       {todo.done ? "Done" : "Active"}
                     </Badge>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                      onClick={() => handleDelete(todo.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your todo.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-red-500 hover:bg-red-600"
+                            onClick={() => deleteMutation.mutate(todo.id)}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </CardContent>
               </Card>

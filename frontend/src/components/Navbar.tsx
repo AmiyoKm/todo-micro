@@ -1,6 +1,7 @@
+import { getMe } from "@/services/user";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckSquare, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import { ModeToggle } from "./mode-toggle";
 import { Button } from "./ui/button";
 import {
@@ -11,11 +12,22 @@ import {
 } from "./ui/dropdown-menu";
 
 export function Navbar() {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+
+  const { data } = useQuery({
+    queryKey: ["user"],
+    queryFn: getMe,
+    enabled: !!localStorage.getItem("token"),
+    retry: false,
+  });
 
   const handleLogout = () => {
-    logout();
+    queryClient.removeQueries({
+      queryKey: ["user"],
+    });
+    localStorage.removeItem("token");
     navigate("/login");
   };
 
@@ -33,7 +45,7 @@ export function Navbar() {
 
         <div className="ml-auto flex items-center space-x-4">
           <div className="text-sm font-medium hidden md:block">
-            {user?.email}
+            {data?.data.name}
           </div>
 
           <ModeToggle />
@@ -42,7 +54,7 @@ export function Navbar() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <img
-                  src={`https://ui-avatars.com/api/?name=${user?.name || "User"}&background=random`}
+                  src={`https://ui-avatars.com/api/?name=${data?.data.name || "User"}&background=random`}
                   alt="Avatar"
                   className="h-8 w-8 rounded-full"
                 />
@@ -51,9 +63,9 @@ export function Navbar() {
             <DropdownMenuContent align="end">
                <div className="flex items-center justify-start gap-2 p-2">
                 <div className="flex flex-col space-y-1 leading-none">
-                  <p className="font-medium">{user?.name}</p>
+                  <p className="font-medium">{data?.data.name}</p>
                   <p className="w-[200px] truncate text-sm text-muted-foreground">
-                    {user?.email}
+                    {data?.data.email}
                   </p>
                 </div>
               </div>
