@@ -43,6 +43,7 @@ func main() {
 		Password:   utils.GetEnv("REDIS_PASSWORD", ""),
 		DB:         utils.GetEnvInt("REDIS_DB_NUMBER", 0),
 		Expiration: time.Duration(utils.GetEnvInt("REDIS_EXPIRATION", 300)) * time.Second,
+		TLS:        utils.GetEnv("REDIS_TLS_ENABLED", "true"),
 	}
 
 	config := configs.Config{

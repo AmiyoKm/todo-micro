@@ -26,5 +26,6 @@ type RedisConfig struct {
 	Port       string
 	Password   string
 	DB         int
+	TLS        string
 	Expiration time.Duration
 }

@@ -3,7 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type app struct {
@@ -12,6 +15,8 @@ type app struct {
 }
 
 func main() {
+	godotenv.Load()
+
 	url := os.Getenv("RABBITMQ_URL")
 	rabbitMQ, err := NewRabbitMQ(url)
 	if err != nil {
@@ -19,6 +24,8 @@ func main() {
 		return
 	}
 	defer rabbitMQ.Close()
+	log.Println("Connected to RabbitMQ")
+
 	err = rabbitMQ.QueueDeclare("todo")
 	if err != nil {
 		fmt.Println("Failed to declare queue:", err)
@@ -47,6 +54,7 @@ func main() {
 		return
 	}
 	defer db.Close()
+	log.Println("Connected to database")
 
 	app := &app{
 		rabbitMQ: rabbitMQ,
